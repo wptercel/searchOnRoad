@@ -1,26 +1,29 @@
 package com.expedia.searchonroad.proxy;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
+import com.google.maps.DirectionsApi;
+import com.google.maps.model.DirectionsLeg;
+import com.google.maps.model.DirectionsResult;
+import com.google.maps.model.DirectionsRoute;
+import com.google.maps.model.DirectionsStep;
 
-public class GoogleMapsDirectionProxy {
-	private final String BASE_URL = "https://maps.googleapis.com/maps/api/directions";
-	private final String AUTHORIZATION = "AIzaSyAT_D6yyyYMmwttda35cImLQcqF1QGV1s0";
-
-	public void getDirection(String origin, String destination) {
-		Client client = ClientBuilder.newClient();
-		WebTarget target = client.target(BASE_URL).path("json")
-				.queryParam("origin", origin)
-				.queryParam("destination", destination)
-				.queryParam("key", AUTHORIZATION);
-
-		System.out.println(target.request(MediaType.TEXT_PLAIN_TYPE).get().readEntity(String.class));
+public class GoogleMapsDirectionProxy extends GoogleMapsProxyBase{
+	
+	private void print() throws Exception{
+		DirectionsResult result = DirectionsApi.getDirections(googleMapsApiContext, "21050 Vanowen Street, Canoga Park, CA", "12601 SE 41st Pl, Bellevue, WA").await();
+		for(DirectionsRoute route : result.routes){
+			for(DirectionsLeg leg : route.legs){
+				System.out.println("Route: " + leg.duration.inSeconds);
+				int seconds = 0;
+				for(DirectionsStep step : leg.steps){
+					seconds += step.duration.inSeconds;
+					System.out.println(step.duration.inSeconds + "\t" + seconds);
+				}
+			}
+		}
 	}
-
-	public static void main(String args[]) {
+	
+	public static void main(String args[]) throws Exception{
 		GoogleMapsDirectionProxy test = new GoogleMapsDirectionProxy();
-		test.getDirection("Montreal", "Toronto");
+		test.print();
 	}
 }
